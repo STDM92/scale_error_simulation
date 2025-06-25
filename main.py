@@ -1,6 +1,4 @@
-from PIL.ImageOps import scale
-
-from population import Population
+from simulation.population import Population
 import config as cfg
 
 def main():
