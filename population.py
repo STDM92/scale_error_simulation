@@ -1,0 +1,55 @@
+import config as cfg
+from utils.console_style import BOLD, RED, CYAN, RESET_ALL
+import numpy as np
+import pandas as pd
+
+
+class Population:
+    def __init__(
+            self,
+            cube_cfg: cfg.cube,
+            pop_cfg: cfg.population,
+            scale_cfg: cfg.scale,
+            seed: int | None = None
+    ) -> None:
+        if seed is not None: np.random.seed(seed)
+        self.cube = cube_cfg
+        self.n = pop_cfg.population_size
+        self.scale = scale_cfg
+
+
+
+    def print_cube(self):
+        print(f"{BOLD}The current cube configuration is as following:{RESET_ALL}")
+        print(f"{RED}Base Weight:{RESET_ALL} {self.cube.base_weight}{self.cube.base_weight_unit}")
+        print(f"{CYAN}Part Tolerance:{RESET_ALL} {self.cube.part_tolerance}{self.cube.tolerance_unit}")
+
+
+    def generate_measurement_err(self) -> pd.DataFrame:
+        """
+        Simulate true cube weights of population N based on part tolerances
+        Simulate measured cube weights based on real weights + random scale error
+        Calculate measurement error
+        """
+        cube_weight_real = np.random.uniform(low=0, high = self.cube.part_tolerance, size = self.n ) + self.cube.base_weight
+        cube_weight_measured = cube_weight_real + np.random.uniform(low=0, high=self.scale.scale_error, size=self.n)
+        return pd.DataFrame({
+        "true_weight":    cube_weight_real,
+        "measured":       cube_weight_measured,
+        "measurement_err": cube_weight_measured - cube_weight_real,
+        })
+
+    def summary(self) -> dict:
+        df = self.generate_measurement_err()
+        return {
+            "mean_err": df.measurement_err.mean(),
+            "std_err": df.measurement_err.std(),
+        }
+
+    def plot_errors(self, ax=None):
+        df = self.generate_measurement_err()
+        import matplotlib.pyplot as plt
+        ax = ax or plt.gca()
+        ax.hist(df.measurement_err, bins=50)
+        ax.set(title="Error Distribution", xlabel="Error", ylabel="Count")
+        return ax
