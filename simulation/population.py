@@ -6,16 +6,48 @@ import pandas as pd
 
 class Population:
     def __init__(
+
             self,
             cube_cfg: cfg.cube,
             pop_cfg: cfg.population,
             scale_cfg: cfg.scale,
             seed: int | None = None
     ) -> None:
+        self._rng = np.random.default_rng(seed)
         if seed is not None: np.random.seed(seed)
         self.cube = cube_cfg
         self.n = pop_cfg.population_size
         self.scale = scale_cfg
+        self.df : pd.DataFrame | None = None
+
+
+    def simulate(self) -> pd.DataFrame:
+        """
+        --- Generate Dataframe with all populations stats ---
+
+                Simulate true cube weights of population N based on part tolerances
+                Simulate measured cube weights based on real weights + random scale error
+                Calculate measurement error
+        """
+        true_weight = self.cube.base_weight+ self._rng.normal(
+            loc=0,
+            scale=self.cube.part_tolerance,
+            size=self.n
+        )
+
+        measured_weight = true_weight + self._rng.normal(
+            loc=0,
+            scale=self.scale.scale_error,
+            size=self.n
+        )
+
+        self.df = pd.DataFrame({
+            "true_weight": true_weight,
+            "measured": measured_weight,
+            "measurement_err": measured_weight - true_weight,
+        })
+
+        return self.df
 
 
 
@@ -25,47 +57,34 @@ class Population:
         print(f"{CYAN}Part Tolerance:{RESET_ALL} {self.cube.part_tolerance}{self.cube.tolerance_unit}")
 
 
-    def generate_measurement_err(self) -> pd.DataFrame:
-        """
-        Simulate true cube weights of population N based on part tolerances
-        Simulate measured cube weights based on real weights + random scale error
-        Calculate measurement error
-        """
-        cube_weight_real = np.random.uniform(low=0, high = self.cube.part_tolerance, size = self.n ) + self.cube.base_weight
-        cube_weight_measured = cube_weight_real + np.random.uniform(low=0, high=self.scale.scale_error, size=self.n)
-        return pd.DataFrame({
-        "true_weight":    cube_weight_real,
-        "measured":       cube_weight_measured,
-        "measurement_err": cube_weight_measured - cube_weight_real,
-        })
-
     def summary(self) -> dict:
-        df = self.generate_measurement_err()
+        df = self.df() if self.df is not None else self.simulate()
+        print(df.describe())
         return {
             "mean_err": df.measurement_err.mean(),
             "std_err": df.measurement_err.std(),
         }
 
     def plot_errors(self, ax=None):
-        df = self.generate_measurement_err()
         import matplotlib.pyplot as plt
+        df = self.df if self.df is not None else self.simulate()
         ax = ax or plt.gca()
-        ax.hist(df.measurement_err, bins=50)
+        ax.hist(df.measurement_err, bins='auto')
         ax.set(title="Error Distribution", xlabel="Error", ylabel="Count")
         return ax
 
     def plot_measured_weights(self, ax=None):
-        df = self.generate_measurement_err()
         import matplotlib.pyplot as plt
+        df = self.df if self.df is not None else self.simulate()
         ax = ax or plt.gca()
-        ax.hist(df.measured, bins=50)
+        ax.hist(df.measured, bins='auto')
         ax.set(title="Measured Weights", xlabel="Weight", ylabel="Count")
         return ax
 
     def plot_true_weights(self, ax=None):
-        df = self.generate_measurement_err()
         import matplotlib.pyplot as plt
+        df = self.df if self.df is not None else self.simulate()
         ax = ax or plt.gca()
-        ax.hist(df.true_weight, bins=50)
+        ax.hist(df.true_weight, bins='auto')
         ax.set(title="True Weights", xlabel="Weight", ylabel="Count")
         return ax

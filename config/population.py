@@ -8,5 +8,5 @@ class PopulationConfig():
 
 default = PopulationConfig(population_size=1_000)
 small = PopulationConfig(population_size=100)
-big = PopulationConfig(population_size=10_000)
-xxl = PopulationConfig(population_size=1_000_000)
+medium = PopulationConfig(population_size=10_000)
+large = PopulationConfig(population_size=1_000_000)
