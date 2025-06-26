@@ -53,3 +53,19 @@ class Population:
         ax.hist(df.measurement_err, bins=50)
         ax.set(title="Error Distribution", xlabel="Error", ylabel="Count")
         return ax
+
+    def plot_measured_weights(self, ax=None):
+        df = self.generate_measurement_err()
+        import matplotlib.pyplot as plt
+        ax = ax or plt.gca()
+        ax.hist(df.measured, bins=50)
+        ax.set(title="Measured Weights", xlabel="Weight", ylabel="Count")
+        return ax
+
+    def plot_true_weights(self, ax=None):
+        df = self.generate_measurement_err()
+        import matplotlib.pyplot as plt
+        ax = ax or plt.gca()
+        ax.hist(df.true_weight, bins=50)
+        ax.set(title="True Weights", xlabel="Weight", ylabel="Count")
+        return ax
