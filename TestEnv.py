@@ -19,7 +19,7 @@ class Application(tkinter.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title('File Search Engine')
+        self.title('Strap Weight Simulation')
         self.style = Style('darkly')
         self.search = SearchEngine(self, padding=10)
         self.search.pack(fill='both', expand='yes')
@@ -31,67 +31,68 @@ class SearchEngine(ttk.Frame):
         # application variables
         self.search_path_var = tkinter.StringVar(value=str(pathlib.Path().absolute()))
         self.search_term_var = tkinter.StringVar(value='txt')
-        self.search_type_var = tkinter.StringVar(value='endswidth')
+        self.decision_var = tkinter.StringVar(value='extend')
         self.search_count = 0
 
-        # container for user input
-        input_labelframe = ttk.Labelframe(self, text='Complete the form to begin your search', padding=(20, 10, 10, 5))
-        input_labelframe.pack(side='top', fill='x')
-        input_labelframe.columnconfigure(1, weight=1)
+        # container for decision-making new pdf or extend existing pdf
+        decision_labelframe = ttk.Labelframe(self, text='Extend an existing or create a new PDF', padding=(20, 10, 10, 5))
+        decision_labelframe.pack(side='top', fill='x')
+        decision_labelframe.columnconfigure(1, weight=1)
 
-        # file path input
-        ttk.Label(input_labelframe, text='Path').grid(row=0, column=0, padx=10, pady=2, sticky='ew')
-        e1 = ttk.Entry(input_labelframe, textvariable=self.search_path_var)
+        # decision-making
+        ttk.Label(decision_labelframe, text='Selection').grid(row=0, column=0, padx=10, pady=2, sticky='ew')
+        option_frame = ttk.Frame(decision_labelframe, padding=(15, 10, 0, 10))
+        option_frame.grid(row=0, column=1, columnspan=2, sticky='ew')
+
+        r1 = ttk.Radiobutton(option_frame, text='Extend Existing', variable=self.decision_var, value='extend', command=self.enable_extend_pdf)
+        r1.pack(side='left', fill='x', pady=2, padx=10)
+
+        r2 = ttk.Radiobutton(option_frame, text='Create New', variable=self.decision_var, value='create', command=self.enable_create_pdf)
+        r2.pack(side='left', fill='x', pady=2, padx=10)
+
+
+        # container extend exsiting
+        self.input_labelframe = ttk.Labelframe(self, text='Extend Existing PDF', padding=(40, 10, 10, 5))
+        self.input_labelframe.pack(side='top', fill='x', pady=10)
+        self.input_labelframe.columnconfigure(1, weight=1)
+
+        # select document input
+        ttk.Label(self.input_labelframe, text='Path').grid(row=0, column=0, padx=10, pady=2, sticky='ew')
+        e1 = ttk.Entry(self.input_labelframe, textvariable=self.search_path_var)
         e1.grid(row=0, column=1, sticky='ew', padx=10, pady=2)
-        b1 = ttk.Button(input_labelframe, text='Browse', command=self.on_browse, style='primary.TButton')
+        b1 = ttk.Button(self.input_labelframe, text='Browse', command=self.on_browse, style='primary.TButton')
         b1.grid(row=0, column=2, sticky='ew', pady=2, ipadx=10)
 
-        # search term input
-        ttk.Label(input_labelframe, text='Term').grid(row=1, column=0, padx=10, pady=2, sticky='ew')
-        e2 = ttk.Entry(input_labelframe, textvariable=self.search_term_var)
+        # figure name input
+        ttk.Label(self.input_labelframe, text='Figure Name').grid(row=1, column=0, padx=10, pady=2, sticky='ew')
+        e2 = ttk.Entry(self.input_labelframe)
         e2.grid(row=1, column=1, sticky='ew', padx=10, pady=2)
-        b2 = ttk.Button(input_labelframe, text='Search', command=self.on_search, style='primary.Outline.TButton')
+        b2 = ttk.Button(self.input_labelframe, text='Create', command=self.on_search, style='primary.Outline.TButton')
         b2.grid(row=1, column=2, sticky='ew', pady=2)
 
-        # search type selection
-        ttk.Label(input_labelframe, text='Type').grid(row=2, column=0, padx=10, pady=2, sticky='ew')
-        option_frame = ttk.Frame(input_labelframe, padding=(15, 10, 0, 10))
-        option_frame.grid(row=2, column=1, columnspan=2, sticky='ew')
-        r1 = ttk.Radiobutton(option_frame, text='Contains', value='contains', variable=self.search_type_var)
-        r1.pack(side='left', fill='x', pady=2, padx=10)
-        r2 = ttk.Radiobutton(option_frame, text='StartsWith', value='startswith', variable=self.search_type_var)
-        r2.pack(side='left', fill='x', pady=2, padx=10)
-        r3 = ttk.Radiobutton(option_frame, text='EndsWith', value='endswith', variable=self.search_type_var)
-        r3.pack(side='left', fill='x', pady=2, padx=10)
-        r3.invoke()
+        # container create new
+        self.create_new_labelframe = ttk.Labelframe(self, text='Create new PDF', padding=(40, 10, 10, 5))
+        self.create_new_labelframe.pack(side='top', fill='x', pady=10)
+        self.create_new_labelframe.columnconfigure(1, weight=1)
 
-        # search results tree
-        self.tree = ttk.Treeview(self, style='info.Treeview')
-        self.tree.pack(fill='both', pady=5)
-        self.tree['columns'] = ('modified', 'type', 'size', 'path')
-        self.tree.column('#0', width=400)
-        self.tree.column('modified', width=150, stretch=False, anchor='e')
-        self.tree.column('type', width=50, stretch=False, anchor='e')
-        self.tree.column('size', width=50, stretch=False, anchor='e')
-        self.tree.heading('#0', text='Name')
-        self.tree.heading('modified', text='Modified date')
-        self.tree.heading('type', text='Type')
-        self.tree.heading('size', text='Size')
-        self.tree.heading('path', text='Path')
+        # select document input
+        ttk.Label(self.create_new_labelframe, text='Path').grid(row=0, column=0, padx=10, pady=2, sticky='ew')
+        e3 = ttk.Entry(self.create_new_labelframe, textvariable=self.search_path_var)
+        e3.grid(row=0, column=1, sticky='ew', padx=10, pady=2)
+        b3 = ttk.Button(self.create_new_labelframe, text='Browse', command=self.on_browse, style='primary.TButton')
+        b3.grid(row=0, column=2, sticky='ew', pady=2, ipadx=10)
 
-        # progress bar
-        self.progressbar = ttk.Progressbar(self, orient='horizontal', mode='indeterminate',
-                                           style='success.Horizontal.TProgressbar')
-        self.progressbar.pack(fill='x', pady=5)
+        # pdf name input
+        ttk.Label(self.create_new_labelframe, text='Figure Name').grid(row=1, column=0, padx=10, pady=2, sticky='ew')
+        e4 = ttk.Entry(self.create_new_labelframe)
+        e4.grid(row=1, column=1, sticky='ew', padx=10, pady=2)
+        b4 = ttk.Button(self.create_new_labelframe, text='Create', command=self.on_search, style='primary.Outline.TButton')
+        b4.grid(row=1, column=2, sticky='ew', pady=2)
+        # figure name input
+        ttk.Label(self.create_new_labelframe, text='Figure Name').grid(row=2, column=0, padx=10, pady=2, sticky='ew')
+        e5 = ttk.Entry(self.create_new_labelframe)
+        e5.grid(row=2, column=1, sticky='ew', padx=10, pady=2)
 
-        # right-click menu for treeview
-        self.menu = tkinter.Menu(self, tearoff=False)
-        self.menu.add_command(label='Reveal in file manager', command=self.on_doubleclick_tree)
-        self.menu.add_command(label='Export results to csv', command=self.export_to_csv)
-
-        # event binding
-        self.tree.bind('<Double-1>', self.on_doubleclick_tree)
-        self.tree.bind('<Button-3>', self.right_click_tree)
 
     def on_browse(self):
         """Callback for directory browse"""
@@ -126,7 +127,7 @@ class SearchEngine(ttk.Frame):
         """Search for a term based on the search type"""
         search_term = self.search_term_var.get()
         search_path = self.search_path_var.get()
-        search_type = self.search_type_var.get()
+        search_type = self.decision_var.get()
         if search_term == '':
             return
         Thread(target=SearchEngine.file_search, args=(search_term, search_path, search_type), daemon=True).start()
@@ -195,6 +196,15 @@ class SearchEngine(ttk.Frame):
             self.tree.see(iid)
         except OSError:
             return
+
+    def enable_extend_pdf(self):
+        self.input_labelframe.pack(pady=10)
+        self.create_new_labelframe.pack_forget()
+
+    def enable_create_pdf(self):
+        self.input_labelframe.pack_forget()
+        self.create_new_labelframe.pack(pady=10)
+
 
     @staticmethod
     def file_search(term, search_path, search_type):

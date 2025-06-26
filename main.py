@@ -1,8 +1,7 @@
 from simulation.population import Population
 import config as cfg
 import matplotlib.pyplot as plt
-
-from utils.console_style import add_plot_to_pdf_bootstrap
+import utils.GUI as GUI
 
 
 def main():
@@ -30,7 +29,7 @@ def main():
     plt.subplots_adjust( top=0.9)
 
 
-    add_plot_to_pdf_bootstrap(fig)
+    gui = GUI.Application(fig)
 
     plt.show()
 
