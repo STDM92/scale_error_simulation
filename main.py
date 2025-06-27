@@ -28,10 +28,8 @@ def main():
 
     plt.subplots_adjust( top=0.9)
 
-
-    gui = GUI.Application(fig)
-
-    plt.show()
+    app = GUI.Application(fig)
+    app.mainloop()
 
 
 
